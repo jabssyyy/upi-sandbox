@@ -9,6 +9,7 @@ import ruleRoutes from './routes/rules.js';
 import walletRoutes from './routes/wallet.js';
 import userRoutes from './routes/users.js';
 import transferRoutes from './routes/transfers.js';
+import adminRoutes from './routes/admin.js';
 
 export const app = express();
 
@@ -27,6 +28,7 @@ app.use('/api/rules', ruleRoutes);
 app.use('/api/wallet', walletRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/transfers', transferRoutes);
+app.use('/api/admin', adminRoutes);
 
 // No route matched: hand a NOT_FOUND error to the error handler.
 app.use((req, res, next) => {

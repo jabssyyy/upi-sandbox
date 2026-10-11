@@ -3,6 +3,7 @@ import { formatPaise } from '../utils/money.js';
 // Blocks a large first payment to someone the sender has never paid before.
 export default {
   key: 'NEW_PAYEE_CAP',
+  paramFields: ['maxAmount'], // paise
   async evaluate(ctx, params) {
     // Cheap check first: small amounts pass without touching the database.
     if (ctx.amount <= params.maxAmount) return null;

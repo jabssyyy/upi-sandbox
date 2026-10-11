@@ -27,6 +27,28 @@ export function buildContext({ sender, receiver, amount, now = new Date() }) {
   };
 }
 
+export const RULE_KEYS = RULE_MODULES.map((r) => r.key);
+
+// The database accepts any shape for params, so the API checks it here.
+// Every field the rule declares must be present as a positive whole number, and nothing extra.
+// Returns an error message, or null if the params are fine.
+export function checkParams(key, params) {
+  const rule = RULE_MODULES.find((r) => r.key === key);
+  if (!rule) return `Unknown rule ${key}`;
+  if (typeof params !== 'object' || params === null || Array.isArray(params)) {
+    return 'params must be an object';
+  }
+  const expected = rule.paramFields;
+  const extra = Object.keys(params).filter((f) => !expected.includes(f));
+  if (extra.length) return `Unknown field(s) for ${key}: ${extra.join(', ')}`;
+  for (const field of expected) {
+    if (!Number.isInteger(params[field]) || params[field] < 1) {
+      return `${field} must be a whole number of at least 1`;
+    }
+  }
+  return null;
+}
+
 // Returns null if the transfer is allowed, or { key, reason } for the first rule it breaks.
 export async function runRules(ctx) {
   // Read from the database on EVERY transfer (no cache): an admin's edit applies to the very next one.

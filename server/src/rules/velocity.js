@@ -1,6 +1,7 @@
 // Blocks rapid-fire transfers: maxCount or more successful sends inside the time window.
 export default {
   key: 'VELOCITY',
+  paramFields: ['maxCount', 'windowSeconds'],
   async evaluate(ctx, params) {
     const recent = await ctx.countRecent(params.windowSeconds);
     if (recent >= params.maxCount) {

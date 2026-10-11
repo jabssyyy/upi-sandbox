@@ -179,3 +179,56 @@ Authorization: Bearer {{priya.response.body.token}}
 Content-Type: application/json
 
 { "toUpiId": "ravi@sandbox", "amount": 99.5 }
+
+### ---------- Phase 6: admin ----------
+# Uses the admin token from "Log in as the admin" above.
+
+### Raise the new-payee cap to ₹30,000 (3000000 paise): the demo's step 4
+PUT {{api}}/rules/NEW_PAYEE_CAP
+Authorization: Bearer {{admin.response.body.token}}
+Content-Type: application/json
+
+{ "params": { "maxAmount": 3000000 } }
+
+### Put it back to ₹10,000
+PUT {{api}}/rules/NEW_PAYEE_CAP
+Authorization: Bearer {{admin.response.body.token}}
+Content-Type: application/json
+
+{ "params": { "maxAmount": 1000000 } }
+
+### Turn VELOCITY off (and on again with "enabled": true)
+PUT {{api}}/rules/VELOCITY
+Authorization: Bearer {{admin.response.body.token}}
+Content-Type: application/json
+
+{ "enabled": false }
+
+### Wrong params shape: expect 400 (VELOCITY needs maxCount AND windowSeconds)
+PUT {{api}}/rules/VELOCITY
+Authorization: Bearer {{admin.response.body.token}}
+Content-Type: application/json
+
+{ "params": { "maxCount": 5 } }
+
+### Typo in a field name: expect 400 "Unknown field(s)"
+PUT {{api}}/rules/DAILY_LIMIT
+Authorization: Bearer {{admin.response.body.token}}
+Content-Type: application/json
+
+{ "params": { "maxAmont": 5000000 } }
+
+### As Priya: expect 403
+PUT {{api}}/rules/DAILY_LIMIT
+Authorization: Bearer {{priya.response.body.token}}
+Content-Type: application/json
+
+{ "enabled": false }
+
+### Blocked log, newest first
+GET {{api}}/admin/blocked
+Authorization: Bearer {{admin.response.body.token}}
+
+### Stats: blocked count per rule, volume per day (last 7 days)
+GET {{api}}/admin/stats
+Authorization: Bearer {{admin.response.body.token}}
