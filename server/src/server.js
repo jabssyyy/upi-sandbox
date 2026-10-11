@@ -1,6 +1,9 @@
 import { env } from './config/env.js';
 import { connectDB } from './config/db.js';
 import { app } from './app.js';
+import { registerListeners } from './events/listeners.js';
+
+registerListeners();
 
 // Connect to the database first, so we never accept requests we can't serve.
 try {

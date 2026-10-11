@@ -1,5 +1,8 @@
 # Open in VS Code with the "REST Client" extension and click "Send Request".
+# Run `npm run seed` first. Every seeded account uses the password Password@123.
 @api = http://localhost:3000/api
+
+### ---------- Phase 1: basics ----------
 
 ### Health check: expect 200 { "ok": true }
 GET {{api}}/health
@@ -12,3 +15,167 @@ POST {{api}}/health
 Content-Type: application/json
 
 { "oops":
+
+### ---------- Phase 3: auth ----------
+
+### Register a new user: expect 201 with a token and a generated upiId
+# (Run it twice: the second time expect 400 "already registered".)
+POST {{api}}/auth/register
+Content-Type: application/json
+
+{ "name": "Test User", "email": "test.user@example.com", "password": "Password@123" }
+
+### Register with bad input: expect 400 VALIDATION_ERROR with details
+POST {{api}}/auth/register
+Content-Type: application/json
+
+{ "name": "", "email": "not-an-email", "password": "short" }
+
+### Log in as Priya (normal user). The token is saved for the requests below.
+# @name priya
+POST {{api}}/auth/login
+Content-Type: application/json
+
+{ "email": "priya@sandbox.dev", "password": "Password@123" }
+
+### Wrong password: expect 401 "Invalid email or password"
+POST {{api}}/auth/login
+Content-Type: application/json
+
+{ "email": "priya@sandbox.dev", "password": "wrong-password" }
+
+### Who am I? (with Priya's token): expect 200 and her profile, no passwordHash
+GET {{api}}/auth/me
+Authorization: Bearer {{priya.response.body.token}}
+
+### Who am I? (no token): expect 401 UNAUTHENTICATED
+GET {{api}}/auth/me
+
+### Who am I? (tampered token): expect 401
+GET {{api}}/auth/me
+Authorization: Bearer {{priya.response.body.token}}x
+
+### Admin route as Priya: expect 403 FORBIDDEN
+GET {{api}}/rules
+Authorization: Bearer {{priya.response.body.token}}
+
+### Log in as the admin
+# @name admin
+POST {{api}}/auth/login
+Content-Type: application/json
+
+{ "email": "admin@sandbox.dev", "password": "Password@123" }
+
+### Admin route as admin: expect 200 with the 3 rules
+GET {{api}}/rules
+Authorization: Bearer {{admin.response.body.token}}
+
+### ---------- Phase 4: wallet, lookup, history ----------
+# These reuse Priya's token: run "Log in as Priya" above first.
+
+### Wallet: balance and today's spend (paise)
+GET {{api}}/wallet
+Authorization: Bearer {{priya.response.body.token}}
+
+### Top up ₹500 (50000 paise)
+POST {{api}}/wallet/topup
+Authorization: Bearer {{priya.response.body.token}}
+Content-Type: application/json
+
+{ "amount": 50000 }
+
+### Top up over ₹50,000: expect 400
+POST {{api}}/wallet/topup
+Authorization: Bearer {{priya.response.body.token}}
+Content-Type: application/json
+
+{ "amount": 5000001 }
+
+### Look up a receiver: expect { name: "Ravi Kumar" } and nothing else
+GET {{api}}/users/lookup?upiId=ravi@sandbox
+Authorization: Bearer {{priya.response.body.token}}
+
+### Look up someone who doesn't exist: expect 404
+GET {{api}}/users/lookup?upiId=nobody@sandbox
+Authorization: Bearer {{priya.response.body.token}}
+
+### History: page 1, newest first
+GET {{api}}/transfers
+Authorization: Bearer {{priya.response.body.token}}
+
+### History: only successful, 3 per page, page 2
+GET {{api}}/transfers?status=success&limit=3&page=2
+Authorization: Bearer {{priya.response.body.token}}
+
+### Log in as Ravi (his seed data has a blocked attempt)
+# @name ravi
+POST {{api}}/auth/login
+Content-Type: application/json
+
+{ "email": "ravi@sandbox.dev", "password": "Password@123" }
+
+### History: Ravi's blocked attempts only: expect 1 row with ruleHit VELOCITY
+GET {{api}}/transfers?status=blocked
+Authorization: Bearer {{ravi.response.body.token}}
+
+### History: a date range (edit the dates to match your seed run)
+GET {{api}}/transfers?from=2026-10-06&to=2026-10-08
+Authorization: Bearer {{priya.response.body.token}}
+
+### History: bad filter values: expect 400 VALIDATION_ERROR
+GET {{api}}/transfers?status=pending&from=yesterday
+Authorization: Bearer {{priya.response.body.token}}
+
+### ---------- Phase 5: transfers and the fraud engine ----------
+# Run `npm run seed` first for a clean slate. Uses Priya's token from above.
+# Amounts are in paise: ₹2,000 = 200000.
+
+### 1. Normal transfer to an old friend (Priya has paid Ravi before): expect 201
+POST {{api}}/transfers
+Authorization: Bearer {{priya.response.body.token}}
+Content-Type: application/json
+
+{ "toUpiId": "ravi@sandbox", "amount": 200000, "note": "Chai" }
+
+### 2. New payee over the cap (₹25,000 to Karan, never paid): expect 403 NEW_PAYEE_CAP
+POST {{api}}/transfers
+Authorization: Bearer {{priya.response.body.token}}
+Content-Type: application/json
+
+{ "toUpiId": "karan@sandbox", "amount": 2500000 }
+
+### 3. Over the daily limit (₹49,000 more to Ravi after the ₹2,000 above): expect 403 DAILY_LIMIT
+POST {{api}}/transfers
+Authorization: Bearer {{priya.response.body.token}}
+Content-Type: application/json
+
+{ "toUpiId": "ravi@sandbox", "amount": 4900000 }
+
+### 4. Velocity: send this ₹10 transfer 3 more times quickly; the 4th within 60s is blocked
+# (Request 1 above counts if it was in the last minute.)
+POST {{api}}/transfers
+Authorization: Bearer {{priya.response.body.token}}
+Content-Type: application/json
+
+{ "toUpiId": "anita@sandbox", "amount": 1000 }
+
+### Hard check: to yourself: expect 400
+POST {{api}}/transfers
+Authorization: Bearer {{priya.response.body.token}}
+Content-Type: application/json
+
+{ "toUpiId": "priya@sandbox", "amount": 1000 }
+
+### Hard check: unknown receiver: expect 404
+POST {{api}}/transfers
+Authorization: Bearer {{priya.response.body.token}}
+Content-Type: application/json
+
+{ "toUpiId": "nobody@sandbox", "amount": 1000 }
+
+### Hard check: decimal paise: expect 400
+POST {{api}}/transfers
+Authorization: Bearer {{priya.response.body.token}}
+Content-Type: application/json
+
+{ "toUpiId": "ravi@sandbox", "amount": 99.5 }

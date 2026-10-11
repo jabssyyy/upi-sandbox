@@ -16,6 +16,14 @@ export function errorHandler(err, req, res, next) {
     });
   }
 
+  // MongoDB refused a duplicate value on a unique index (e.g. two signups with one email at once).
+  if (err.code === 11000) {
+    const field = Object.keys(err.keyValue ?? {})[0] ?? 'value';
+    return res.status(400).json({
+      error: { code: 'VALIDATION_ERROR', message: `That ${field} is already in use` },
+    });
+  }
+
   // Anything else is a bug: log the details, but don't leak them to the client.
   console.error(err);
   res.status(500).json({

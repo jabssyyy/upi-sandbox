@@ -28,4 +28,14 @@ const transactionSchema = new mongoose.Schema(
 // Speeds up "this sender's transactions, newest first", used by history and every fraud rule.
 transactionSchema.index({ from: 1, createdAt: -1 });
 
+// Total paise a user has successfully sent since a moment in time.
+// Used by GET /wallet ("today's spend") and the DAILY_LIMIT fraud rule.
+transactionSchema.statics.sumSpentSince = async function (userId, since) {
+  const [row] = await this.aggregate([
+    { $match: { from: userId, status: 'success', createdAt: { $gte: since } } },
+    { $group: { _id: null, total: { $sum: '$amount' } } },
+  ]);
+  return row?.total ?? 0; // no matching rows means nothing spent
+};
+
 export const Transaction = mongoose.model('Transaction', transactionSchema);
