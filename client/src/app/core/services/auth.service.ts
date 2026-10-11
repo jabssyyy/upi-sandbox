@@ -10,6 +10,7 @@ const USER_KEY = 'upi_user';
 
 function readStoredUser(): User | null {
   try {
+    if (!localStorage.getItem(TOKEN_KEY)) return null; // a profile without a token is not a session
     const raw = localStorage.getItem(USER_KEY);
     return raw ? (JSON.parse(raw) as User) : null;
   } catch {

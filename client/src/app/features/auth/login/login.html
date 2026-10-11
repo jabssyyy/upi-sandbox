@@ -1,0 +1,56 @@
+<div class="card narrow">
+  <h1 class="page-title">Log in</h1>
+  <p class="muted">Use your sandbox account. No real money moves here.</p>
+
+  @if (serverError()) {
+    <div class="panel panel-danger" role="alert">{{ serverError() }}</div>
+  }
+
+  <form #form="ngForm" (ngSubmit)="onSubmit(form)">
+    <div class="form-field">
+      <label for="email">Email</label>
+      <input
+        id="email"
+        type="email"
+        name="email"
+        [(ngModel)]="model.email"
+        #email="ngModel"
+        required
+        email
+        autocomplete="email"
+        [class.invalid]="email.invalid && (email.touched || form.submitted)"
+      />
+      @if (email.invalid && (email.touched || form.submitted)) {
+        @if (email.errors?.['required']) {
+          <span class="field-error">Email is required</span>
+        } @else if (email.errors?.['email']) {
+          <span class="field-error">Enter a valid email</span>
+        }
+      }
+    </div>
+
+    <div class="form-field">
+      <label for="password">Password</label>
+      <input
+        id="password"
+        type="password"
+        name="password"
+        [(ngModel)]="model.password"
+        #password="ngModel"
+        required
+        autocomplete="current-password"
+        [class.invalid]="password.invalid && (password.touched || form.submitted)"
+      />
+      @if (password.invalid && (password.touched || form.submitted)) {
+        <span class="field-error">Password is required</span>
+      }
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-block" [disabled]="submitting()">
+      {{ submitting() ? 'Logging in…' : 'Log in' }}
+    </button>
+  </form>
+
+  <p class="small">New here? <a routerLink="/register">Create an account</a></p>
+  <p class="muted small">Demo account: priya&#64;sandbox.dev / Password&#64;123</p>
+</div>

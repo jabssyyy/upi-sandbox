@@ -1,0 +1,98 @@
+<div class="page-header">
+  <h1 class="page-title">Fraud rules</h1>
+  <p class="muted">Changes apply to the very next transfer. No restart: the rules live in MongoDB.</p>
+</div>
+
+@if (loading()) {
+  <p class="loading">Loading rules…</p>
+} @else if (loadError()) {
+  <div class="panel panel-danger">{{ loadError() }}</div>
+} @else {
+  <div class="stack">
+    @for (card of cards(); track card.rule().key) {
+      <form class="card" [formGroup]="card.form" (ngSubmit)="save(card)">
+        <div class="row card-head">
+          <div>
+            <h2 class="card-title">{{ card.rule().name }}</h2>
+            <p class="muted small">{{ descriptions[card.rule().key] }}</p>
+          </div>
+          <span class="spacer"></span>
+          <label class="row toggle">
+            <span class="switch">
+              <input type="checkbox" formControlName="enabled" />
+              <span></span>
+            </span>
+            <span class="toggle-text">{{ card.form.controls.enabled.value ? 'Enabled' : 'Off' }}</span>
+          </label>
+        </div>
+
+        @if (card.kind === 'money') {
+          <div class="form-field">
+            <label [attr.for]="card.rule().key + '-maxAmount'">Max amount (₹)</label>
+            <input
+              type="number"
+              min="1"
+              step="0.01"
+              formControlName="maxAmount"
+              [id]="card.rule().key + '-maxAmount'"
+              [class.invalid]="card.form.controls.maxAmount.invalid && card.form.controls.maxAmount.dirty"
+            />
+            @if (card.form.controls.maxAmount.invalid && card.form.controls.maxAmount.dirty) {
+              <span class="field-error">Enter at least ₹1, with up to 2 decimals.</span>
+            }
+          </div>
+        } @else {
+          <div class="fields">
+            <div class="form-field">
+              <label [attr.for]="card.rule().key + '-maxCount'">Max transfers</label>
+              <input
+                type="number"
+                min="1"
+                step="1"
+                formControlName="maxCount"
+                [id]="card.rule().key + '-maxCount'"
+                [class.invalid]="card.form.controls.maxCount.invalid && card.form.controls.maxCount.dirty"
+              />
+              @if (card.form.controls.maxCount.invalid && card.form.controls.maxCount.dirty) {
+                <span class="field-error">Enter a whole number, 1 or more.</span>
+              }
+            </div>
+            <div class="form-field">
+              <label [attr.for]="card.rule().key + '-windowSeconds'">Window (seconds)</label>
+              <input
+                type="number"
+                min="1"
+                step="1"
+                formControlName="windowSeconds"
+                [id]="card.rule().key + '-windowSeconds'"
+                [class.invalid]="card.form.controls.windowSeconds.invalid && card.form.controls.windowSeconds.dirty"
+              />
+              @if (card.form.controls.windowSeconds.invalid && card.form.controls.windowSeconds.dirty) {
+                <span class="field-error">Enter a whole number, 1 or more.</span>
+              }
+            </div>
+          </div>
+        }
+
+        @if (card.error()) {
+          <div class="panel panel-danger">{{ card.error() }}</div>
+        }
+
+        <div class="row">
+          <button
+            type="submit"
+            class="btn btn-primary"
+            [disabled]="card.form.pristine || card.form.invalid || card.saving()"
+          >
+            {{ card.saving() ? 'Saving…' : 'Save' }}
+          </button>
+          @if (card.saved() && card.form.pristine) {
+            <span class="saved">Saved. The next transfer uses this rule.</span>
+          }
+          <span class="spacer"></span>
+          <span class="muted small">Last updated {{ card.rule().updatedAt | date: 'd MMM y, h:mm a' }}</span>
+        </div>
+      </form>
+    }
+  </div>
+}

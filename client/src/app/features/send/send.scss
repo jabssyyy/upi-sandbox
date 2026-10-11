@@ -1,0 +1,22 @@
+// The server's reason is the point of the demo, so it gets the most weight on the panel.
+.big-message {
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin: 6px 0;
+}
+
+.label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.lookup-found {
+  color: var(--success);
+  font-size: 0.88rem;
+}
+
+.footnote {
+  text-align: center;
+  margin-top: 12px;
+}

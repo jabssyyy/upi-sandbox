@@ -1,0 +1,39 @@
+.card-head {
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.card-head .card-title {
+  margin-bottom: 2px;
+}
+
+.card-head p {
+  margin: 0;
+}
+
+.toggle {
+  gap: 8px;
+  cursor: pointer;
+}
+
+.toggle-text {
+  font-weight: 600;
+  font-size: 0.9rem;
+  min-width: 4.5em;
+}
+
+// The two velocity fields sit side by side when there is room.
+.fields {
+  display: grid;
+  gap: 0 16px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.form-field input {
+  max-width: 260px;
+}
+
+.saved {
+  color: var(--success);
+  font-weight: 600;
+}

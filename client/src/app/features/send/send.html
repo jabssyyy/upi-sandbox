@@ -1,0 +1,98 @@
+<div class="narrow">
+  <header class="page-header">
+    <h1 class="page-title">Send money</h1>
+    @if (auth.user(); as user) {
+      <p class="muted">
+        Available: <span class="amount">{{ user.balance / 100 | currency: 'INR' : 'symbol' : '1.0-2' }}</span>
+      </p>
+    }
+  </header>
+
+  @if (result(); as r) {
+    @switch (r.kind) {
+      @case ('success') {
+        <div class="panel panel-success" role="status">
+          <div class="panel-title">
+            Sent <span class="amount">{{ r.amount / 100 | currency: 'INR' : 'symbol' : '1.0-2' }}</span> to {{ r.to }}
+          </div>
+          <div>New balance: <span class="amount">{{ r.balance / 100 | currency: 'INR' : 'symbol' : '1.0-2' }}</span></div>
+        </div>
+      }
+      @case ('blocked') {
+        <div class="panel panel-danger" role="alert">
+          <div class="panel-title">Blocked by fraud check</div>
+          <p class="big-message">{{ r.message }}</p>
+          <div class="small">Rule: <strong>{{ r.rule }}</strong></div>
+        </div>
+      }
+      @case ('error') {
+        <div class="panel panel-danger" role="alert">
+          <div class="panel-title">Transfer failed</div>
+          <div>{{ r.message }}</div>
+        </div>
+      }
+    }
+  }
+
+  <form class="card" [formGroup]="form" (ngSubmit)="send()">
+    <div class="form-field">
+      <label for="toUpiId">To (UPI id)</label>
+      <input
+        id="toUpiId"
+        type="text"
+        formControlName="toUpiId"
+        placeholder="name@sandbox"
+        autocomplete="off"
+        [class.invalid]="!!errorFor('toUpiId')"
+        (blur)="lookupReceiver()"
+      />
+      @if (errorFor('toUpiId'); as message) {
+        <span class="field-error">{{ message }}</span>
+      } @else if (receiver(); as r) {
+        <span class="lookup-found">Paying <strong>{{ r.name }}</strong></span>
+      } @else if (receiverNotFound()) {
+        <span class="field-error">No user with this UPI id</span>
+      }
+    </div>
+
+    <div class="form-field">
+      <label for="amount">Amount (₹)</label>
+      <input
+        id="amount"
+        type="number"
+        formControlName="amount"
+        placeholder="2000"
+        min="1"
+        step="0.01"
+        inputmode="decimal"
+        [class.invalid]="!!errorFor('amount')"
+      />
+      @if (errorFor('amount'); as message) {
+        <span class="field-error">{{ message }}</span>
+      }
+    </div>
+
+    <div class="form-field">
+      <div class="label-row">
+        <label for="note">Note <span class="muted">(optional)</span></label>
+        <span class="hint">{{ form.controls.note.value.length }}/60</span>
+      </div>
+      <input
+        id="note"
+        type="text"
+        formControlName="note"
+        placeholder="Lunch, rent, …"
+        [class.invalid]="!!errorFor('note')"
+      />
+      @if (errorFor('note'); as message) {
+        <span class="field-error">{{ message }}</span>
+      }
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-block" [disabled]="submitting() || form.invalid">
+      {{ submitting() ? 'Sending…' : 'Send' }}
+    </button>
+  </form>
+
+  <p class="muted small footnote">Every transfer is checked against the fraud rules on the server before any money moves.</p>
+</div>

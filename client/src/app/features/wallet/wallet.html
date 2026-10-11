@@ -1,0 +1,114 @@
+<div class="page-header">
+  <h1 class="page-title">Hi, {{ firstName() }}</h1>
+  <p class="muted">Your UPI id: <strong>{{ auth.user()?.upiId }}</strong></p>
+</div>
+
+@if (walletError()) {
+  <div class="panel panel-danger">{{ walletError() }}</div>
+}
+
+<div class="stack">
+  <div class="grid">
+    <div class="card">
+      <div class="stat-label">Balance</div>
+      <div class="stat-value">
+        @if (walletLoading()) { <span class="muted">…</span> }
+        @else { {{ balance() / 100 | currency: 'INR' : 'symbol' : '1.0-2' }} }
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="stat-label">Today's spend</div>
+      <div class="stat-value">
+        @if (walletLoading()) { <span class="muted">…</span> }
+        @else { {{ todaySpent() / 100 | currency: 'INR' : 'symbol' : '1.0-2' }} }
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="stat-label">Quick actions</div>
+      <div class="row actions">
+        <a class="btn btn-primary" routerLink="/send">Send money</a>
+        <a class="btn btn-secondary" routerLink="/history">View history</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 class="card-title">Add sandbox money</h2>
+    <!-- Template-driven form: ngModel keeps the input and the topupRupees signal in sync. -->
+    <form class="row topup" (ngSubmit)="topup()">
+      <div class="form-field">
+        <label for="topup-amount">Amount (₹)</label>
+        <input
+          id="topup-amount"
+          name="amount"
+          type="number"
+          min="1"
+          max="50000"
+          step="0.01"
+          placeholder="e.g. 5000"
+          [(ngModel)]="topupRupees"
+          [class.invalid]="topupError()"
+        />
+        <span class="hint">Fake money, ₹1 to ₹50,000 at a time.</span>
+      </div>
+      <button type="submit" class="btn btn-primary" [disabled]="topupBusy()">
+        {{ topupBusy() ? 'Adding…' : 'Add money' }}
+      </button>
+    </form>
+    @if (topupError()) {
+      <p class="field-error">{{ topupError() }}</p>
+    }
+    @if (topupAdded(); as added) {
+      <p class="added">Added {{ added / 100 | currency: 'INR' : 'symbol' : '1.0-2' }} to your wallet.</p>
+    }
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <h2 class="card-title">Recent activity</h2>
+      <span class="spacer"></span>
+      <a class="small" routerLink="/history">See all</a>
+    </div>
+
+    @if (recentLoading()) {
+      <p class="loading">Loading recent activity…</p>
+    } @else if (recentError()) {
+      <div class="panel panel-danger">{{ recentError() }}</div>
+    } @else {
+      <ul class="activity">
+        @for (t of recent(); track t._id) {
+          @let sent = t.direction === 'sent';
+          <li class="row">
+            <div>
+              <div>
+                <strong>{{ sent ? 'To ' + t.to.name : 'From ' + t.from.name }}</strong>
+              </div>
+              <div class="muted small">
+                {{ t.createdAt | date: 'd MMM, h:mm a' }}@if (t.note) { · {{ t.note }} }
+              </div>
+              @if (t.ruleHit) {
+                <div class="muted small">{{ t.ruleHit.reason }}</div>
+              }
+            </div>
+            <span class="spacer"></span>
+            <!-- Blocked money never moved, so it is struck through instead of coloured. -->
+            <span
+              class="amount"
+              [ngClass]="{
+                'amount-in': !sent && t.status === 'success',
+                'amount-blocked': t.status === 'blocked',
+              }"
+            >
+              {{ sent ? '−' : '+' }}{{ t.amount / 100 | currency: 'INR' : 'symbol' : '1.0-2' }}
+            </span>
+            <app-status-badge [status]="t.status" />
+          </li>
+        } @empty {
+          <li class="empty-state">No transactions yet. Send some money to get started.</li>
+        }
+      </ul>
+    }
+  </div>
+</div>

@@ -1,0 +1,124 @@
+<div class="page-header row">
+  <div>
+    <h1 class="page-title">Blocked log</h1>
+    <p class="muted">Every transfer the fraud rules stopped, newest first.</p>
+  </div>
+  <span class="spacer"></span>
+  <button type="button" class="btn btn-secondary" (click)="refresh()" [disabled]="loading()">
+    {{ loading() ? 'Refreshing…' : 'Refresh' }}
+  </button>
+</div>
+
+@if (error()) {
+  <div class="panel panel-danger">{{ error() }}</div>
+}
+
+@if (stats(); as s) {
+  <div class="stack section">
+    <div class="grid">
+      <div class="card">
+        <div class="stat-label">Successful transfers</div>
+        <div class="stat-value">{{ s.totals.success }}</div>
+      </div>
+      <div class="card">
+        <div class="stat-label">Blocked attempts</div>
+        <div class="stat-value blocked">{{ s.totals.blocked }}</div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2 class="card-title">Blocks by rule</h2>
+        @for (bar of ruleBars(); track bar.key) {
+          <div class="rule-bar">
+            <span class="small">{{ bar.label }}</span>
+            <div class="track"><div class="fill" [style.width.%]="bar.percent"></div></div>
+            <span class="amount small">{{ bar.count }}</span>
+          </div>
+        }
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">Money moved, last 7 days</h2>
+        <div class="days">
+          @for (day of dayBars(); track day.date) {
+            <div class="day" [title]="day.count + ' transfers'">
+              <span class="day-amount">{{ day.amount / 100 | currency: 'INR' : 'symbol' : '1.0-2' }}</span>
+              <div class="day-track"><div class="day-bar" [style.height.%]="day.percent"></div></div>
+              <span class="day-label">{{ day.date | date: 'EEE' }}</span>
+              <span class="day-label muted">{{ day.date | date: 'd MMM' }}</span>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+<div class="card">
+  <h2 class="card-title">Blocked attempts</h2>
+
+  @if (blocked(); as data) {
+    @if (data.items.length === 0) {
+      <p class="empty-state">No blocked attempts yet</p>
+    } @else {
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>From</th>
+              <th>To</th>
+              <th class="num">Amount</th>
+              <th>Rule</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (t of data.items; track t._id) {
+              <tr>
+                <td class="nowrap">{{ t.createdAt | date: 'd MMM, h:mm:ss a' }}</td>
+                <td>
+                  <div>{{ t.from.name }}</div>
+                  <div class="muted small">{{ t.from.upiId }}</div>
+                </td>
+                <td>
+                  <div>{{ t.to.name }}</div>
+                  <div class="muted small">{{ t.to.upiId }}</div>
+                </td>
+                <td class="num amount">{{ t.amount / 100 | currency: 'INR' : 'symbol' : '1.0-2' }}</td>
+                <td>
+                  @if (t.ruleHit; as hit) {
+                    <span class="badge badge-danger">{{ labels[hit.key] }}</span>
+                    <div class="muted small">{{ hit.reason }}</div>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pagination">
+        <button
+          type="button"
+          class="btn btn-secondary btn-sm"
+          (click)="loadPage(data.page - 1)"
+          [disabled]="loading() || data.page <= 1"
+        >
+          Previous
+        </button>
+        <span class="small muted">Page {{ data.page }} of {{ data.totalPages }}</span>
+        <button
+          type="button"
+          class="btn btn-secondary btn-sm"
+          (click)="loadPage(data.page + 1)"
+          [disabled]="loading() || data.page >= data.totalPages"
+        >
+          Next
+        </button>
+      </div>
+    }
+  } @else if (loading()) {
+    <p class="loading">Loading blocked attempts…</p>
+  }
+</div>

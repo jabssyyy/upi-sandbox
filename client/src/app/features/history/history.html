@@ -1,0 +1,110 @@
+<div class="page-header">
+  <h1 class="page-title">History</h1>
+  <p class="muted">Every transfer you sent or received, including the ones the fraud rules blocked.</p>
+</div>
+
+<!-- Filter bar.
+     Property binding [value] pushes a signal's value INTO the input.
+     Event binding (change) sends what the user picked back OUT to the class. -->
+<div class="card filters">
+  <div class="form-field">
+    <label for="f-status">Status</label>
+    <select id="f-status" #statusSel [value]="status()" (change)="onStatusChange(statusSel.value)">
+      <option value="">All</option>
+      <option value="success">Success</option>
+      <option value="blocked">Blocked</option>
+    </select>
+  </div>
+  <div class="form-field">
+    <label for="f-from">From</label>
+    <input id="f-from" type="date" #fromInput [value]="fromDate()" (input)="fromDate.set(fromInput.value)" />
+  </div>
+  <div class="form-field">
+    <label for="f-to">To</label>
+    <input id="f-to" type="date" #toInput [value]="toDate()" (input)="toDate.set(toInput.value)" />
+  </div>
+  <div class="row buttons">
+    <button type="button" class="btn btn-primary" [disabled]="loading()" (click)="apply()">Apply</button>
+    <button type="button" class="btn btn-secondary" [disabled]="loading()" (click)="reset()">Reset</button>
+  </div>
+</div>
+
+@if (filterError()) {
+  <p class="field-error">{{ filterError() }}</p>
+}
+
+<div class="card">
+  @if (error()) {
+    <div class="panel panel-danger">{{ error() }}</div>
+  } @else if (loading()) {
+    <p class="loading">Loading transactions…</p>
+  } @else if (items().length === 0) {
+    <p class="empty-state">No transactions match these filters.</p>
+  } @else {
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Date &amp; time</th>
+            <th>Counterpart</th>
+            <th>Note</th>
+            <th class="num">Amount</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (t of items(); track t._id) {
+            @let sent = t.direction === 'sent';
+            @let other = sent ? t.to : t.from;
+            <!-- The custom attribute directive tints blocked rows red. -->
+            <tr [appHighlightBlocked]="t.status">
+              <td class="nowrap">{{ t.createdAt | date: 'd MMM y, h:mm a' }}</td>
+              <td>
+                <div class="muted small">{{ sent ? 'Sent to' : 'Received from' }}</div>
+                <div><strong>{{ other.name }}</strong></div>
+                <div class="muted small">{{ other.upiId }}</div>
+              </td>
+              <td>{{ t.note || '—' }}</td>
+              <td class="num">
+                <!-- Blocked money never moved, so it is struck through instead of coloured. -->
+                <span
+                  class="amount"
+                  [ngClass]="{
+                    'amount-in': !sent && t.status === 'success',
+                    'amount-blocked': t.status === 'blocked',
+                  }"
+                >
+                  {{ sent ? '−' : '+' }}{{ t.amount / 100 | currency: 'INR' : 'symbol' : '1.0-2' }}
+                </span>
+              </td>
+              <td>
+                <!-- [status] passes the value into StatusBadge's @Input. -->
+                <app-status-badge [status]="t.status" />
+                @if (t.ruleHit) {
+                  <div class="muted small reason">{{ t.ruleHit.reason }}</div>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  @if (!error() && total() > 0) {
+    <div class="pagination">
+      <span class="muted small">{{ total() }} transactions · Page {{ page() }} of {{ totalPages() }}</span>
+      <button type="button" class="btn btn-secondary btn-sm" [disabled]="loading() || page() <= 1" (click)="previous()">
+        Previous
+      </button>
+      <button
+        type="button"
+        class="btn btn-secondary btn-sm"
+        [disabled]="loading() || page() >= totalPages()"
+        (click)="next()"
+      >
+        Next
+      </button>
+    </div>
+  }
+</div>
