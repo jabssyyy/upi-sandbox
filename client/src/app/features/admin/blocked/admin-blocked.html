@@ -53,6 +53,16 @@
       </div>
     </div>
   </div>
+} @else if (!error()) {
+  <!-- Placeholders shaped like the stat cards while the numbers load. -->
+  <div class="grid section" aria-busy="true" aria-label="Loading stats">
+    @for (i of [1, 2]; track i) {
+      <div class="card">
+        <div class="skeleton skeleton-line"></div>
+        <div class="skeleton skeleton-title"></div>
+      </div>
+    }
+  </div>
 }
 
 <div class="card">
@@ -119,6 +129,10 @@
       </div>
     }
   } @else if (loading()) {
-    <p class="loading">Loading blocked attempts…</p>
+    <div aria-busy="true" aria-label="Loading blocked attempts">
+      @for (i of [1, 2, 3, 4]; track i) {
+        <div class="skeleton skeleton-line"></div>
+      }
+    </div>
   }
 </div>

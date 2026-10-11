@@ -1,21 +1,27 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { CurrencyPipe, DatePipe, NgClass } from '@angular/common';
+import { CurrencyPipe, DatePipe, NgClass, formatDate } from '@angular/common';
+import { firstValueFrom } from 'rxjs';
 import { TransferService } from '../../core/services/transfer.service';
+import { ToastService } from '../../core/services/toast.service';
 import { HistoryFilters, Transaction, TransactionStatus } from '../../core/models/transaction';
 import { apiErrorMessage } from '../../core/models/api-error';
 import { StatusBadge } from '../../shared/status-badge/status-badge';
 import { HighlightBlocked } from '../../shared/highlight-blocked.directive';
+import { Receipt } from '../../shared/receipt/receipt';
+import { downloadCsv, transactionsToCsv } from './csv';
 
 const PAGE_SIZE = 10;
+const EXPORT_PAGE_SIZE = 50; // the server's maximum page size
 
 @Component({
   selector: 'app-history',
-  imports: [NgClass, CurrencyPipe, DatePipe, StatusBadge, HighlightBlocked],
+  imports: [NgClass, CurrencyPipe, DatePipe, StatusBadge, HighlightBlocked, Receipt],
   templateUrl: './history.html',
   styleUrl: './history.scss',
 })
 export class HistoryPage implements OnInit {
   private transferService = inject(TransferService);
+  private toast = inject(ToastService);
 
   // What the user has typed in the filter bar (not sent until "Apply").
   protected status = signal<'' | TransactionStatus>(''); // '' means All
@@ -34,6 +40,9 @@ export class HistoryPage implements OnInit {
   protected total = signal(0);
   protected loading = signal(true);
   protected error = signal('');
+
+  protected selected = signal<Transaction | null>(null); // the row shown in the receipt
+  protected exporting = signal(false);
 
   ngOnInit(): void {
     this.load(1);
@@ -73,6 +82,33 @@ export class HistoryPage implements OnInit {
 
   next(): void {
     if (this.page() < this.totalPages()) this.load(this.page() + 1);
+  }
+
+  // Fetches every page for the applied filters, then saves them as one CSV file.
+  async exportCsv(): Promise<void> {
+    this.exporting.set(true);
+    try {
+      const rows: Transaction[] = [];
+      let page = 1;
+      let totalPages = 1;
+      do {
+        // firstValueFrom turns the one-reply Observable into a Promise we can await in a loop.
+        const res = await firstValueFrom(
+          this.transferService.list({ ...this.applied, page, limit: EXPORT_PAGE_SIZE }),
+        );
+        rows.push(...res.items);
+        totalPages = res.totalPages;
+        page++;
+      } while (page <= totalPages);
+
+      const today = formatDate(new Date(), 'yyyy-MM-dd', 'en-IN');
+      downloadCsv(transactionsToCsv(rows), `upi-sandbox-history-${today}.csv`);
+      this.toast.success(`Exported ${rows.length} transactions`);
+    } catch (err) {
+      this.toast.error(apiErrorMessage(err));
+    } finally {
+      this.exporting.set(false);
+    }
   }
 
   // The filtering happens on the server: we only ask for one page of matching rows.

@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { CurrencyPipe } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { ThemeService } from '../../core/services/theme.service';
 
 @Component({
   selector: 'app-nav-bar',
@@ -12,4 +13,5 @@ import { AuthService } from '../../core/services/auth.service';
 export class NavBar {
   // Injected services are used straight from the template, e.g. auth.isLoggedIn().
   protected auth = inject(AuthService);
+  protected theme = inject(ThemeService);
 }

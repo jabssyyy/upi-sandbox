@@ -20,3 +20,19 @@
   text-align: center;
   margin-top: 12px;
 }
+
+.payees { margin-bottom: 16px; }
+.payee-chips { gap: 8px; margin-top: 6px; }
+
+// The coloured circle with the payee's initials.
+.initials {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--primary-tint);
+  color: var(--primary);
+  font-size: 0.7rem;
+  font-weight: 700;
+}

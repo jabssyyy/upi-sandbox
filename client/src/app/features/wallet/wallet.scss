@@ -1,4 +1,24 @@
-.actions { margin-top: 12px; }
+// Gradient built only from theme variables, so it follows light and dark mode.
+.hero {
+  background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+  color: var(--on-primary);
+  border: none;
+  padding: 28px;
+
+  .skeleton { opacity: 0.35; } // grey placeholders, softened on the coloured card
+}
+
+.hero-label { font-size: 0.85rem; font-weight: 500; opacity: 0.85; }
+.hero-balance { font-size: 2.8rem; font-weight: 800; line-height: 1.15; margin: 4px 0; }
+.hero-upi { opacity: 0.85; font-size: 0.95rem; }
+.hero-spend { font-size: 1.25rem; font-weight: 700; }
+.hero-footer { margin-top: 24px; }
+.spend-skeleton { width: 120px; height: 20px; }
+
+// Buttons that stay readable on the gradient: inverted colours, and an outline version.
+.hero-btn { background: var(--on-primary); color: var(--primary); }
+.hero-btn-ghost { background: transparent; color: var(--on-primary); border-color: var(--on-primary); }
+.hero-btn:hover, .hero-btn-ghost:hover { opacity: 0.9; }
 
 .topup {
   align-items: flex-start;
@@ -7,16 +27,32 @@
   .btn { margin-top: 29px; } // line the button up with the input, not the label
 }
 
-.added { color: var(--success); font-weight: 600; margin: 12px 0 0; }
-
 .activity {
   list-style: none;
   margin: 0;
   padding: 0;
 
-  li { padding: 12px 0; border-bottom: 1px solid var(--line); flex-wrap: nowrap; }
+  li { border-bottom: 1px solid var(--line); }
   li:last-child { border-bottom: none; }
 }
+
+// Reset the browser's button look so the row reads like a list item.
+.activity-row {
+  width: 100%;
+  flex-wrap: nowrap;
+  padding: 12px 4px;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover { background: var(--bg); }
+}
+
+.who span { display: block; }
+.activity-skeleton { height: 40px; }
 
 .amount-in { color: var(--success); }
 .amount-blocked { color: var(--muted); text-decoration: line-through; }

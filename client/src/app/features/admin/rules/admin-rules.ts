@@ -2,10 +2,12 @@ import { Component, OnInit, WritableSignal, inject, signal } from '@angular/core
 import { DatePipe } from '@angular/common';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RuleService } from '../../../core/services/rule.service';
-import { Rule, RuleKey, RuleParamsByKey } from '../../../core/models/rule';
+import { ToastService } from '../../../core/services/toast.service';
+import { AnyRule, RuleKey, RuleParamsByKey } from '../../../core/models/rule';
 import { rupeesToPaise } from '../../../core/models/money';
 import { apiErrorMessage } from '../../../core/models/api-error';
 import { RULE_DESCRIPTIONS } from '../rule-text';
+import { RuleSimulator } from './rule-simulator/rule-simulator';
 
 // The controls of each kind of form. Number inputs give null when empty, hence "| null".
 type MoneyFields = { enabled: FormControl<boolean>; maxAmount: FormControl<number | null> };
@@ -18,9 +20,8 @@ type VelocityFields = {
 // What one card needs besides its form. These are signals because the app is zoneless:
 // the template only re-renders when a signal it reads changes.
 interface CardState {
-  rule: WritableSignal<Rule>;
+  rule: WritableSignal<AnyRule>;
   saving: WritableSignal<boolean>;
-  saved: WritableSignal<boolean>;
   error: WritableSignal<string | null>;
 }
 
@@ -36,13 +37,14 @@ const WHOLE = [Validators.required, Validators.min(1), Validators.pattern(/^\d+$
 
 @Component({
   selector: 'app-admin-rules',
-  imports: [ReactiveFormsModule, DatePipe],
+  imports: [ReactiveFormsModule, DatePipe, RuleSimulator],
   templateUrl: './admin-rules.html',
   styleUrl: './admin-rules.scss',
 })
 export class AdminRulesPage implements OnInit {
   private ruleService = inject(RuleService);
   private fb = inject(FormBuilder);
+  private toast = inject(ToastService);
 
   readonly descriptions = RULE_DESCRIPTIONS;
 
@@ -66,7 +68,6 @@ export class AdminRulesPage implements OnInit {
   save(card: RuleCard): void {
     if (card.form.invalid || card.saving()) return;
     card.saving.set(true);
-    card.saved.set(false);
     card.error.set(null);
 
     const changes = { enabled: card.form.controls.enabled.value, params: this.paramsOf(card) };
@@ -75,8 +76,8 @@ export class AdminRulesPage implements OnInit {
         // The form already holds what was saved, so it just stops being "changed".
         card.form.markAsPristine();
         card.rule.set(updated);
-        card.saved.set(true);
         card.saving.set(false);
+        this.toast.success(`${updated.name} saved. It applies to the next transfer.`);
       },
       error: (err: unknown) => {
         card.error.set(apiErrorMessage(err));
@@ -86,22 +87,21 @@ export class AdminRulesPage implements OnInit {
   }
 
   // Builds one card (form + state) from a rule document.
-  private toCard(rule: Rule): RuleCard {
+  private toCard(rule: AnyRule): RuleCard {
     const state: CardState = {
       rule: signal(rule),
       saving: signal(false),
-      saved: signal(false),
       error: signal(null),
     };
     const enabled = this.fb.nonNullable.control(rule.enabled);
-    const params = rule.params;
 
-    // params has a different shape per rule, so we check which fields it has.
-    if ('maxCount' in params) {
+    // params has a different shape per rule. Checking the key narrows the type,
+    // so inside this if TypeScript knows params is { maxCount, windowSeconds }.
+    if (rule.key === 'VELOCITY') {
       const form = this.fb.group({
         enabled,
-        maxCount: this.fb.control<number | null>(params.maxCount, WHOLE),
-        windowSeconds: this.fb.control<number | null>(params.windowSeconds, WHOLE),
+        maxCount: this.fb.control<number | null>(rule.params.maxCount, WHOLE),
+        windowSeconds: this.fb.control<number | null>(rule.params.windowSeconds, WHOLE),
       });
       return { ...state, kind: 'velocity', form };
     }
@@ -109,7 +109,7 @@ export class AdminRulesPage implements OnInit {
     // The server stores paise; the admin edits rupees.
     const form = this.fb.group({
       enabled,
-      maxAmount: this.fb.control<number | null>(params.maxAmount / 100, RUPEES),
+      maxAmount: this.fb.control<number | null>(rule.params.maxAmount / 100, RUPEES),
     });
     return { ...state, kind: 'money', form };
   }

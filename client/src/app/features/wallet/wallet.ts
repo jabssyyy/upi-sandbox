@@ -5,16 +5,18 @@ import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { WalletService } from '../../core/services/wallet.service';
 import { TransferService } from '../../core/services/transfer.service';
+import { ToastService } from '../../core/services/toast.service';
 import { Transaction } from '../../core/models/transaction';
-import { rupeesToPaise } from '../../core/models/money';
+import { formatPaise, rupeesToPaise } from '../../core/models/money';
 import { apiErrorMessage } from '../../core/models/api-error';
 import { StatusBadge } from '../../shared/status-badge/status-badge';
+import { Receipt } from '../../shared/receipt/receipt';
 
 const MAX_TOPUP_RUPEES = 50000; // the server's per-call limit
 
 @Component({
   selector: 'app-wallet',
-  imports: [RouterLink, FormsModule, NgClass, CurrencyPipe, DatePipe, StatusBadge],
+  imports: [RouterLink, FormsModule, NgClass, CurrencyPipe, DatePipe, StatusBadge, Receipt],
   templateUrl: './wallet.html',
   styleUrl: './wallet.scss',
 })
@@ -22,6 +24,7 @@ export class WalletPage implements OnInit {
   protected auth = inject(AuthService);
   private walletService = inject(WalletService);
   private transferService = inject(TransferService);
+  private toast = inject(ToastService);
 
   // The app is zoneless: only signal changes re-render the template.
   protected balance = signal(0); // paise
@@ -32,6 +35,7 @@ export class WalletPage implements OnInit {
   protected recent = signal<Transaction[]>([]);
   protected recentLoading = signal(true);
   protected recentError = signal('');
+  protected selected = signal<Transaction | null>(null); // the row shown in the receipt
 
   // "Ravi Kumar" -> "Ravi"
   protected firstName = computed(() => this.auth.user()?.name.split(' ')[0] ?? '');
@@ -40,7 +44,6 @@ export class WalletPage implements OnInit {
   protected topupRupees = signal<number | null>(null);
   protected topupBusy = signal(false);
   protected topupError = signal('');
-  protected topupAdded = signal<number | null>(null); // paise added by the last top-up
 
   ngOnInit(): void {
     this.walletService.getWallet().subscribe({
@@ -70,7 +73,6 @@ export class WalletPage implements OnInit {
 
   topup(): void {
     this.topupError.set('');
-    this.topupAdded.set(null);
 
     const rupees = this.topupRupees();
     // Check in the browser first so we never send a bad amount to the server.
@@ -89,7 +91,7 @@ export class WalletPage implements OnInit {
       next: (res) => {
         this.balance.set(res.balance);
         this.auth.setBalance(res.balance);
-        this.topupAdded.set(paise);
+        this.toast.success(`Added ${formatPaise(paise)} to your wallet`);
         this.topupRupees.set(null);
         this.topupBusy.set(false);
       },

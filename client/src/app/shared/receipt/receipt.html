@@ -1,0 +1,53 @@
+@let t = transaction;
+<div class="modal-backdrop" (click)="onBackdropClick($event)">
+  <div class="card modal" role="dialog" aria-modal="true" aria-labelledby="receipt-title">
+    <div class="row">
+      <h2 id="receipt-title" class="card-title">Transaction receipt</h2>
+      <span class="spacer"></span>
+      <app-status-badge [status]="t.status" />
+    </div>
+
+    <!-- Blocked money never moved, so it is struck through instead of coloured. -->
+    <div
+      class="big-amount amount"
+      [class.amount-in]="!sent && t.status === 'success'"
+      [class.amount-blocked]="t.status === 'blocked'"
+    >
+      {{ sent ? '−' : '+' }}{{ t.amount / 100 | currency: 'INR' : 'symbol' : '1.0-2' }}
+    </div>
+
+    @if (t.status === 'blocked') {
+      <div class="panel panel-danger">
+        Blocked by {{ ruleLabel }}: {{ t.ruleHit?.reason }}. No money moved.
+      </div>
+    }
+
+    <dl class="details">
+      <dt>{{ sent ? 'Sent to' : 'Received from' }}</dt>
+      <dd>
+        <strong>{{ other.name }}</strong>
+        <div class="muted small">{{ other.upiId }}</div>
+      </dd>
+
+      <dt>Date &amp; time</dt>
+      <dd>{{ t.createdAt | date: 'd MMM y, h:mm:ss a' }}</dd>
+
+      <dt>Note</dt>
+      <dd>{{ t.note || '—' }}</dd>
+
+      <dt>Transaction id</dt>
+      <dd class="row id-row">
+        <code>{{ t._id }}</code>
+        <button type="button" class="btn btn-secondary btn-sm" (click)="copyId()">Copy</button>
+      </dd>
+    </dl>
+
+    <div class="row actions">
+      @if (sent && t.status === 'success') {
+        <a class="btn btn-primary" routerLink="/send" [queryParams]="{ to: other.upiId }">Send again</a>
+      }
+      <span class="spacer"></span>
+      <button #closeButton type="button" class="btn btn-secondary" (click)="close()">Close</button>
+    </div>
+  </div>
+</div>

@@ -232,3 +232,20 @@ Authorization: Bearer {{admin.response.body.token}}
 ### Stats: blocked count per rule, volume per day (last 7 days)
 GET {{api}}/admin/stats
 Authorization: Bearer {{admin.response.body.token}}
+
+### ---------- Rule simulator (dry run): nothing is saved, no money moves ----------
+# Uses the admin token. Run the PUT requests above, then these again, and watch the verdict flip.
+
+### Simulate Priya -> Karan ₹25,000 (new payee): expect verdict allowed false, rule NEW_PAYEE_CAP
+POST {{api}}/rules/simulate
+Authorization: Bearer {{admin.response.body.token}}
+Content-Type: application/json
+
+{ "fromUpiId": "priya@sandbox", "toUpiId": "karan@sandbox", "amount": 2500000 }
+
+### Simulate Priya -> Ravi ₹2,000 (old friend): expect verdict allowed true, every rule "pass"
+POST {{api}}/rules/simulate
+Authorization: Bearer {{admin.response.body.token}}
+Content-Type: application/json
+
+{ "fromUpiId": "priya@sandbox", "toUpiId": "ravi@sandbox", "amount": 200000 }

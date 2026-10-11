@@ -1,3 +1,26 @@
+// Rule cards and the simulator stack on phones, and sit side by side on wide screens.
+.layout {
+  display: grid;
+  gap: 16px;
+  align-items: start;
+}
+
+@media (min-width: 900px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  // Stays in view while the admin scrolls the rule cards.
+  .simulator {
+    position: sticky;
+    top: 16px;
+  }
+}
+
+.simulator {
+  display: block;
+}
+
 .card-head {
   align-items: flex-start;
   margin-bottom: 16px;
@@ -33,7 +56,3 @@
   max-width: 260px;
 }
 
-.saved {
-  color: var(--success);
-  font-weight: 600;
-}

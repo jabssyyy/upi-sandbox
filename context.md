@@ -24,6 +24,7 @@ In scope:
 - Transaction history with filters
 - Fraud rule engine with 3 configurable rules
 - Admin screens: edit rules, view the blocked log, see simple stats
+- Extras approved by the owner on 2026-10-11: dark mode, toasts and skeleton loaders; recent-payee chips, transaction receipts and CSV export; an admin rule simulator (`POST /api/rules/simulate`, a dry run that never writes)
 
 Out of scope (do not add, even if it seems nice):
 - Real payments, real bank or UPI APIs, KYC, OTP, email or SMS
@@ -157,6 +158,7 @@ All routes are under `/api`. JSON in and out. Auth means `Authorization: Bearer 
 | GET `/transfers` | user | own history. Query: `status`, `from`, `to` (dates), `page`, `limit` |
 | GET `/rules` | admin | list rules |
 | PUT `/rules/:key` | admin | update `enabled` and `params` |
+| POST `/rules/simulate` | admin | dry run: body `{ fromUpiId, toUpiId, amount }`, returns each rule's outcome, writes nothing |
 | GET `/admin/blocked` | admin | blocked transactions, newest first |
 | GET `/admin/stats` | admin | aggregation: blocked count per rule, transfer volume per day |
 

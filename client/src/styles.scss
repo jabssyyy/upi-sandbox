@@ -19,12 +19,82 @@
   --warning: #8a5300;
   --warning-tint: #fff4dc;
   --warning-line: #f3dca6;
+  --on-primary: #ffffff;
+  --success-line: #b5dfc4;
+  --danger-line: #f5c2bd;
+  --primary-line: #d6cdfd;
+  --switch-off: #c8ccd4;
+  --switch-knob: #ffffff;
+  --skeleton: #e9ebf0;
+  --skeleton-shine: #f6f7f9;
+  --overlay: rgb(16 24 40 / 45%);
+  color-scheme: light;
 
   --radius: 12px;
   --radius-sm: 8px;
   --shadow: 0 1px 2px rgb(16 24 40 / 6%), 0 1px 3px rgb(16 24 40 / 8%);
   --max-width: 1040px;
   --font: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Dark theme: follows the OS unless the user picked one with the toggle (ThemeService sets data-theme). */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #0f1115;
+    --surface: #171a21;
+    --text: #e8eaef;
+    --muted: #9aa2b1;
+    --line: #2a2f3a;
+    --primary: #8b74ff;
+    --primary-hover: #a08dff;
+    --primary-tint: #241d4a;
+    --primary-line: #3d3175;
+    --on-primary: #0f1115;
+    --success: #4ccb7f;
+    --success-tint: #12291c;
+    --success-line: #1f4a31;
+    --danger: #ff7a6e;
+    --danger-tint: #2f1614;
+    --danger-line: #5a2722;
+    --warning: #f2b84b;
+    --warning-tint: #2b2210;
+    --warning-line: #4d3c17;
+    --switch-off: #3a404d;
+    --switch-knob: #e8eaef;
+    --skeleton: #222630;
+    --skeleton-shine: #2c313d;
+    --overlay: rgb(0 0 0 / 60%);
+    --shadow: 0 1px 2px rgb(0 0 0 / 40%);
+    color-scheme: dark;
+  }
+}
+:root[data-theme='dark'] {
+  --bg: #0f1115;
+  --surface: #171a21;
+  --text: #e8eaef;
+  --muted: #9aa2b1;
+  --line: #2a2f3a;
+  --primary: #8b74ff;
+  --primary-hover: #a08dff;
+  --primary-tint: #241d4a;
+  --primary-line: #3d3175;
+  --on-primary: #0f1115;
+  --success: #4ccb7f;
+  --success-tint: #12291c;
+  --success-line: #1f4a31;
+  --danger: #ff7a6e;
+  --danger-tint: #2f1614;
+  --danger-line: #5a2722;
+  --warning: #f2b84b;
+  --warning-tint: #2b2210;
+  --warning-line: #4d3c17;
+  --switch-off: #3a404d;
+  --switch-knob: #e8eaef;
+  --skeleton: #222630;
+  --skeleton-shine: #2c313d;
+  --overlay: rgb(0 0 0 / 60%);
+  --shadow: 0 1px 2px rgb(0 0 0 / 40%);
+  color-scheme: dark;
 }
 
 *,
@@ -95,11 +165,11 @@ h1, h2, h3 { line-height: 1.25; margin: 0 0 8px; }
   transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 .btn:disabled { opacity: 0.55; cursor: not-allowed; }
-.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary { background: var(--primary); color: var(--on-primary); }
 .btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
 .btn-secondary { background: var(--surface); color: var(--text); border-color: var(--line); }
 .btn-secondary:hover:not(:disabled) { background: var(--bg); }
-.btn-danger { background: var(--danger); color: #fff; }
+.btn-danger { background: var(--danger); color: var(--on-primary); }
 .btn-sm { padding: 5px 10px; font-size: 0.85rem; }
 .btn-block { width: 100%; }
 
@@ -139,7 +209,7 @@ select.invalid { border-color: var(--danger); }
 .switch span {
   position: absolute;
   inset: 0;
-  background: #c8ccd4;
+  background: var(--switch-off);
   border-radius: 24px;
   cursor: pointer;
   transition: background-color 0.15s ease;
@@ -151,7 +221,7 @@ select.invalid { border-color: var(--danger); }
   height: 18px;
   left: 3px;
   top: 3px;
-  background: #fff;
+  background: var(--switch-knob);
   border-radius: 50%;
   transition: transform 0.15s ease;
 }
@@ -162,9 +232,9 @@ select.invalid { border-color: var(--danger); }
 /* ---------- panels (messages) ---------- */
 .panel { border-radius: var(--radius-sm); padding: 12px 16px; border: 1px solid; margin-bottom: 16px; }
 .panel-title { font-weight: 700; margin-bottom: 2px; }
-.panel-success { background: var(--success-tint); border-color: #b5dfc4; color: var(--success); }
-.panel-danger { background: var(--danger-tint); border-color: #f5c2bd; color: var(--danger); }
-.panel-info { background: var(--primary-tint); border-color: #d6cdfd; color: var(--primary-hover); }
+.panel-success { background: var(--success-tint); border-color: var(--success-line); color: var(--success); }
+.panel-danger { background: var(--danger-tint); border-color: var(--danger-line); color: var(--danger); }
+.panel-info { background: var(--primary-tint); border-color: var(--primary-line); color: var(--primary-hover); }
 
 /* ---------- badges ---------- */
 .badge {
@@ -201,3 +271,49 @@ select.invalid { border-color: var(--danger); }
 .loading { color: var(--muted); padding: 24px 0; text-align: center; }
 
 .pagination { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-top: 16px; }
+
+/* ---------- skeleton loaders: grey shapes that shimmer while data loads ---------- */
+.skeleton {
+  display: block;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(90deg, var(--skeleton) 25%, var(--skeleton-shine) 50%, var(--skeleton) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.3s ease-in-out infinite;
+}
+.skeleton-line { height: 14px; margin: 10px 0; }
+.skeleton-title { height: 28px; width: 50%; margin: 6px 0 12px; }
+.skeleton-block { height: 72px; }
+@keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+/* ---------- modal (used by the receipt) ---------- */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 50;
+}
+.modal { width: 100%; max-width: 440px; max-height: 90vh; overflow-y: auto; }
+
+/* ---------- chips (quick picks) ---------- */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.chip:hover { border-color: var(--primary); color: var(--primary); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}

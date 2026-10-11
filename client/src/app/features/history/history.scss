@@ -14,3 +14,18 @@
 
 .amount-in { color: var(--success); }
 .amount-blocked { color: var(--muted); text-decoration: line-through; }
+
+.toolbar { margin-bottom: 12px; }
+.skeleton-row { height: 44px; }
+.clickable { cursor: pointer; }
+.clickable:hover td { background: var(--bg); }
+
+// Read by screen readers, invisible on screen.
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

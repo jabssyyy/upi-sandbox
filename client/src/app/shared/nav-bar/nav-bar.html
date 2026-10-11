@@ -4,6 +4,16 @@
   <div class="nav-inner">
     <a class="brand" routerLink="/">UPI <span>Sandbox</span></a>
 
+    <button
+      type="button"
+      class="theme-toggle"
+      (click)="theme.toggle()"
+      [attr.aria-label]="theme.theme() === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'"
+      [title]="theme.theme() === 'dark' ? 'Light mode' : 'Dark mode'"
+    >
+      {{ theme.theme() === 'dark' ? '☀' : '☾' }}
+    </button>
+
     @if (auth.isLoggedIn()) {
       <nav class="links">
         <a routerLink="/wallet" routerLinkActive="active">Wallet</a>

@@ -1,0 +1,103 @@
+<form class="card" [formGroup]="form" (ngSubmit)="run()">
+  <h2 class="card-title">Rule simulator</h2>
+  <p class="muted small intro">Dry run: no money moves and nothing is logged.</p>
+
+  <div class="fields">
+    <div class="form-field">
+      <label for="sim-from">From (UPI id)</label>
+      <input
+        id="sim-from"
+        type="text"
+        formControlName="fromUpiId"
+        placeholder="priya@sandbox"
+        autocomplete="off"
+        [class.invalid]="!!errorFor('fromUpiId')"
+      />
+      @if (errorFor('fromUpiId'); as message) {
+        <span class="field-error">{{ message }}</span>
+      }
+    </div>
+
+    <div class="form-field">
+      <label for="sim-to">To (UPI id)</label>
+      <input
+        id="sim-to"
+        type="text"
+        formControlName="toUpiId"
+        placeholder="karan@sandbox"
+        autocomplete="off"
+        [class.invalid]="!!errorFor('toUpiId')"
+      />
+      @if (errorFor('toUpiId'); as message) {
+        <span class="field-error">{{ message }}</span>
+      }
+    </div>
+  </div>
+
+  <div class="form-field">
+    <label for="sim-amount">Amount (₹)</label>
+    <input
+      id="sim-amount"
+      type="number"
+      formControlName="amount"
+      placeholder="25000"
+      min="1"
+      step="0.01"
+      inputmode="decimal"
+      [class.invalid]="!!errorFor('amount')"
+    />
+    @if (errorFor('amount'); as message) {
+      <span class="field-error">{{ message }}</span>
+    }
+  </div>
+
+  <button type="submit" class="btn btn-primary" [disabled]="running()">
+    {{ running() ? 'Running…' : 'Run simulation' }}
+  </button>
+
+  @if (error()) {
+    <div class="panel panel-danger result" role="alert">{{ error() }}</div>
+  }
+
+  @if (result(); as r) {
+    <div class="result" role="status">
+      <!-- The verdict is what a real transfer would do right now. -->
+      <div class="panel verdict" [class.panel-success]="r.verdict.allowed" [class.panel-danger]="!r.verdict.allowed">
+        <div class="panel-title">
+          @if (r.verdict.allowed) {
+            Would be allowed
+          } @else {
+            Would be blocked: {{ r.verdict.reason }}
+          }
+        </div>
+        <div class="small">
+          {{ r.sender.name }} → {{ r.receiver.name }},
+          <span class="amount">{{ r.amount / 100 | currency: 'INR' : 'symbol' : '1.0-2' }}</span>
+        </div>
+      </div>
+
+      <ul class="checks">
+        <li>
+          <span class="badge" [class]="r.enoughBalance ? 'badge-success' : 'badge-danger'">
+            {{ r.enoughBalance ? 'Pass' : 'Block' }}
+          </span>
+          <div>
+            <div class="check-name">Balance</div>
+            <div class="muted small">
+              {{ r.sender.balance / 100 | currency: 'INR' : 'symbol' : '1.0-2' }} available
+            </div>
+          </div>
+        </li>
+        @for (row of r.results; track row.key) {
+          <li>
+            <span class="badge" [class]="outcomes[row.outcome].badge">{{ outcomes[row.outcome].label }}</span>
+            <div>
+              <div class="check-name">{{ row.name }}</div>
+              <div class="muted small">{{ row.reason ?? outcomes[row.outcome].text }}</div>
+            </div>
+          </li>
+        }
+      </ul>
+    </div>
+  }
+</form>

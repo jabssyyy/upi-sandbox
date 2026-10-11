@@ -1,6 +1,5 @@
 <div class="page-header">
   <h1 class="page-title">Hi, {{ firstName() }}</h1>
-  <p class="muted">Your UPI id: <strong>{{ auth.user()?.upiId }}</strong></p>
 </div>
 
 @if (walletError()) {
@@ -8,31 +7,30 @@
 }
 
 <div class="stack">
-  <div class="grid">
-    <div class="card">
-      <div class="stat-label">Balance</div>
-      <div class="stat-value">
-        @if (walletLoading()) { <span class="muted">…</span> }
-        @else { {{ balance() / 100 | currency: 'INR' : 'symbol' : '1.0-2' }} }
-      </div>
-    </div>
+  <!-- The hero card: the one number people open a wallet to see. -->
+  <section class="card hero" aria-label="Wallet summary">
+    <div class="hero-label">Available balance</div>
+    @if (walletLoading()) {
+      <span class="skeleton skeleton-title"></span>
+    } @else {
+      <div class="hero-balance amount">{{ balance() / 100 | currency: 'INR' : 'symbol' : '1.0-2' }}</div>
+    }
+    <div class="hero-upi">{{ auth.user()?.upiId }}</div>
 
-    <div class="card">
-      <div class="stat-label">Today's spend</div>
-      <div class="stat-value">
-        @if (walletLoading()) { <span class="muted">…</span> }
-        @else { {{ todaySpent() / 100 | currency: 'INR' : 'symbol' : '1.0-2' }} }
+    <div class="row hero-footer">
+      <div>
+        <div class="hero-label">Today's spend</div>
+        @if (walletLoading()) {
+          <span class="skeleton skeleton-line spend-skeleton"></span>
+        } @else {
+          <div class="hero-spend amount">{{ todaySpent() / 100 | currency: 'INR' : 'symbol' : '1.0-2' }}</div>
+        }
       </div>
+      <span class="spacer"></span>
+      <a class="btn hero-btn" routerLink="/send">Send money</a>
+      <a class="btn hero-btn-ghost" routerLink="/history">View history</a>
     </div>
-
-    <div class="card">
-      <div class="stat-label">Quick actions</div>
-      <div class="row actions">
-        <a class="btn btn-primary" routerLink="/send">Send money</a>
-        <a class="btn btn-secondary" routerLink="/history">View history</a>
-      </div>
-    </div>
-  </div>
+  </section>
 
   <div class="card">
     <h2 class="card-title">Add sandbox money</h2>
@@ -60,9 +58,6 @@
     @if (topupError()) {
       <p class="field-error">{{ topupError() }}</p>
     }
-    @if (topupAdded(); as added) {
-      <p class="added">Added {{ added / 100 | currency: 'INR' : 'symbol' : '1.0-2' }} to your wallet.</p>
-    }
   </div>
 
   <div class="card">
@@ -73,37 +68,42 @@
     </div>
 
     @if (recentLoading()) {
-      <p class="loading">Loading recent activity…</p>
+      <div aria-busy="true" aria-label="Loading recent activity">
+        @for (n of [1, 2, 3]; track n) {
+          <span class="skeleton skeleton-line activity-skeleton"></span>
+        }
+      </div>
     } @else if (recentError()) {
       <div class="panel panel-danger">{{ recentError() }}</div>
     } @else {
       <ul class="activity">
         @for (t of recent(); track t._id) {
           @let sent = t.direction === 'sent';
-          <li class="row">
-            <div>
-              <div>
+          <li>
+            <!-- A real <button>, so the row also opens with Tab + Enter. -->
+            <button type="button" class="row activity-row" (click)="selected.set(t)">
+              <span class="who">
                 <strong>{{ sent ? 'To ' + t.to.name : 'From ' + t.from.name }}</strong>
-              </div>
-              <div class="muted small">
-                {{ t.createdAt | date: 'd MMM, h:mm a' }}@if (t.note) { · {{ t.note }} }
-              </div>
-              @if (t.ruleHit) {
-                <div class="muted small">{{ t.ruleHit.reason }}</div>
-              }
-            </div>
-            <span class="spacer"></span>
-            <!-- Blocked money never moved, so it is struck through instead of coloured. -->
-            <span
-              class="amount"
-              [ngClass]="{
-                'amount-in': !sent && t.status === 'success',
-                'amount-blocked': t.status === 'blocked',
-              }"
-            >
-              {{ sent ? '−' : '+' }}{{ t.amount / 100 | currency: 'INR' : 'symbol' : '1.0-2' }}
-            </span>
-            <app-status-badge [status]="t.status" />
+                <span class="muted small">
+                  {{ t.createdAt | date: 'd MMM, h:mm a' }}@if (t.note) { · {{ t.note }} }
+                </span>
+                @if (t.ruleHit) {
+                  <span class="muted small">{{ t.ruleHit.reason }}</span>
+                }
+              </span>
+              <span class="spacer"></span>
+              <!-- Blocked money never moved, so it is struck through instead of coloured. -->
+              <span
+                class="amount"
+                [ngClass]="{
+                  'amount-in': !sent && t.status === 'success',
+                  'amount-blocked': t.status === 'blocked',
+                }"
+              >
+                {{ sent ? '−' : '+' }}{{ t.amount / 100 | currency: 'INR' : 'symbol' : '1.0-2' }}
+              </span>
+              <app-status-badge [status]="t.status" />
+            </button>
           </li>
         } @empty {
           <li class="empty-state">No transactions yet. Send some money to get started.</li>
@@ -112,3 +112,8 @@
     }
   </div>
 </div>
+
+<!-- The receipt only exists in the page while a row is selected. -->
+@if (selected(); as t) {
+  <app-receipt [transaction]="t" (closed)="selected.set(null)" />
+}

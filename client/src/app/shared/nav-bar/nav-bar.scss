@@ -62,3 +62,16 @@
   line-height: 1.2;
   font-size: 0.85rem;
 }
+
+.theme-toggle {
+  order: 10; // sits at the far right on wide screens
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 1rem;
+  cursor: pointer;
+  &:hover { border-color: var(--primary); color: var(--primary); }
+}

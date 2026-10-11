@@ -34,6 +34,21 @@
     }
   }
 
+  <!-- Hidden for new users: there is nobody to suggest yet. -->
+  @if (recentPayees().length > 0) {
+    <section class="payees" aria-labelledby="payees-title">
+      <div id="payees-title" class="muted small">Recent payees</div>
+      <div class="row payee-chips">
+        @for (p of recentPayees(); track p.upiId) {
+          <button type="button" class="chip" [title]="p.name + ' · ' + p.upiId" (click)="chooseReceiver(p.upiId)">
+            <span class="initials" aria-hidden="true">{{ initials(p.name) }}</span>
+            {{ firstName(p.name) }}
+          </button>
+        }
+      </div>
+    </section>
+  }
+
   <form class="card" [formGroup]="form" (ngSubmit)="send()">
     <div class="form-field">
       <label for="toUpiId">To (UPI id)</label>

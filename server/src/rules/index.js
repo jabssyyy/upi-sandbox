@@ -62,3 +62,25 @@ export async function runRules(ctx) {
   }
   return null;
 }
+
+// For the admin's dry run. Unlike runRules it does NOT stop at the first hit:
+// it reports every rule, in engine order, so the admin sees the full picture.
+// Rules only run read queries, so this never changes the database.
+export async function evaluateAll(ctx) {
+  const docs = await Rule.find().lean();
+  const docByKey = new Map(docs.map((r) => [r.key, r]));
+
+  const results = [];
+  for (const rule of RULE_MODULES) {
+    const doc = docByKey.get(rule.key);
+    const name = doc?.name ?? rule.key;
+    if (!doc?.enabled) {
+      // Disabled (or missing) rules are not evaluated, exactly like runRules skips them.
+      results.push({ key: rule.key, name, enabled: false, outcome: 'off', reason: null });
+      continue;
+    }
+    const hit = await rule.evaluate(ctx, doc.params);
+    results.push({ key: rule.key, name, enabled: true, outcome: hit ? 'block' : 'pass', reason: hit ? hit.reason : null });
+  }
+  return results;
+}

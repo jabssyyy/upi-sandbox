@@ -1,12 +1,15 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CurrencyPipe } from '@angular/common';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AuthService } from '../../core/services/auth.service';
 import { TransferService } from '../../core/services/transfer.service';
-import { rupeesToPaise } from '../../core/models/money';
+import { ToastService } from '../../core/services/toast.service';
+import { formatPaise, rupeesToPaise } from '../../core/models/money';
 import { apiErrorBody, apiErrorMessage } from '../../core/models/api-error';
-import { RuleKey } from '../../core/models/rule';
+import { UserRef } from '../../core/models/user';
+import { RULE_LABELS } from '../../shared/receipt/rule-labels';
 
 // <input type="number"> happily accepts 10.555, but paise can't be split further.
 function maxTwoDecimals(control: AbstractControl): ValidationErrors | null {
@@ -21,11 +24,7 @@ type SendResult =
   | { kind: 'blocked'; message: string; rule: string }
   | { kind: 'error'; message: string };
 
-const RULE_LABELS: Record<RuleKey, string> = {
-  DAILY_LIMIT: 'Daily limit',
-  NEW_PAYEE_CAP: 'New payee cap',
-  VELOCITY: 'Too many transfers',
-};
+const MAX_RECENT_PAYEES = 5;
 
 @Component({
   selector: 'app-send',
@@ -33,9 +32,11 @@ const RULE_LABELS: Record<RuleKey, string> = {
   templateUrl: './send.html',
   styleUrl: './send.scss',
 })
-export class SendPage {
+export class SendPage implements OnInit {
   private fb = inject(FormBuilder);
   private transfers = inject(TransferService);
+  private toast = inject(ToastService);
+  private route = inject(ActivatedRoute);
   protected auth = inject(AuthService);
 
   // nonNullable: reset() goes back to these starting values instead of null.
@@ -50,12 +51,60 @@ export class SendPage {
   protected receiver = signal<{ name: string; upiId: string } | null>(null);
   protected receiverNotFound = signal(false);
   protected result = signal<SendResult | null>(null);
+  protected recentPayees = signal<UserRef[]>([]);
 
   constructor() {
     // A name shown for an old UPI id would be misleading, so drop it as soon as the id changes.
     this.form.controls.toUpiId.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => {
       this.receiver.set(null);
       this.receiverNotFound.set(false);
+    });
+  }
+
+  ngOnInit(): void {
+    this.loadRecentPayees();
+    // /send?to=ravi@sandbox (the receipt's "Send again" link) pre-fills the receiver.
+    const to = this.route.snapshot.queryParamMap.get('to');
+    if (to) this.chooseReceiver(to);
+  }
+
+  // Fills the UPI field as if the user typed it, then looks up the name.
+  chooseReceiver(upiId: string): void {
+    const upiField = this.form.controls.toUpiId;
+    upiField.setValue(upiId);
+    upiField.markAsTouched(); // show a pattern error straight away if the id is bad
+    this.lookupReceiver();
+  }
+
+  // "Ravi Kumar" -> "RK", shown in the chip's circle.
+  initials(name: string): string {
+    return name
+      .split(' ')
+      .filter((part) => part)
+      .slice(0, 2)
+      .map((part) => part[0].toUpperCase())
+      .join('');
+  }
+
+  firstName(name: string): string {
+    return name.split(' ')[0];
+  }
+
+  // The server returns newest first, so the first time we meet a receiver is the latest payment to them.
+  private loadRecentPayees(): void {
+    this.transfers.list({ status: 'success', limit: 50 }).subscribe({
+      next: (page) => {
+        const seen = new Set<string>();
+        const payees: UserRef[] = [];
+        for (const t of page.items) {
+          if (t.direction !== 'sent' || seen.has(t.to.upiId)) continue;
+          seen.add(t.to.upiId);
+          payees.push(t.to);
+          if (payees.length === MAX_RECENT_PAYEES) break;
+        }
+        this.recentPayees.set(payees);
+      },
+      error: () => this.recentPayees.set([]), // the chips are only a shortcut; the form still works
     });
   }
 
@@ -90,12 +139,10 @@ export class SendPage {
       next: (res) => {
         this.submitting.set(false);
         this.auth.setBalance(res.balance);
-        this.result.set({
-          kind: 'success',
-          amount: res.transaction.amount,
-          to: this.receiver()?.name ?? toUpiId,
-          balance: res.balance,
-        });
+        const to = this.receiver()?.name ?? toUpiId;
+        this.result.set({ kind: 'success', amount: res.transaction.amount, to, balance: res.balance });
+        this.toast.success(`Sent ${formatPaise(res.transaction.amount)} to ${to}`);
+        this.loadRecentPayees(); // a first-time receiver now shows up as a chip
         // Keep the receiver so sending again is quick.
         this.form.controls.amount.reset();
         this.form.controls.note.reset();

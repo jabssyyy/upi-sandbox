@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { API_URL } from '../api';
-import { Rule, RuleKey, RuleUpdate, Stats } from '../models/rule';
+import { AnyRule, RuleKey, RuleUpdate, SimulationRequest, SimulationResult, Stats } from '../models/rule';
 import { Page, Transaction } from '../models/transaction';
 
 // Everything the admin screens need. The server rejects these calls for non-admins.
@@ -10,12 +10,17 @@ import { Page, Transaction } from '../models/transaction';
 export class RuleService {
   private http = inject(HttpClient);
 
-  getRules(): Observable<Rule[]> {
-    return this.http.get<{ rules: Rule[] }>(`${API_URL}/rules`).pipe(map((res) => res.rules));
+  getRules(): Observable<AnyRule[]> {
+    return this.http.get<{ rules: AnyRule[] }>(`${API_URL}/rules`).pipe(map((res) => res.rules));
   }
 
-  updateRule(key: RuleKey, changes: RuleUpdate): Observable<Rule> {
-    return this.http.put<{ rule: Rule }>(`${API_URL}/rules/${key}`, changes).pipe(map((res) => res.rule));
+  updateRule(key: RuleKey, changes: RuleUpdate): Observable<AnyRule> {
+    return this.http.put<{ rule: AnyRule }>(`${API_URL}/rules/${key}`, changes).pipe(map((res) => res.rule));
+  }
+
+  // Dry run: asks the server what a transfer WOULD do. Nothing is saved.
+  simulate(req: SimulationRequest): Observable<SimulationResult> {
+    return this.http.post<SimulationResult>(`${API_URL}/rules/simulate`, req);
   }
 
   getBlocked(page = 1, limit = 20): Observable<Page<Transaction>> {

@@ -1,0 +1,28 @@
+.big-amount {
+  font-size: 2.2rem;
+  font-weight: 750;
+  margin: 4px 0 16px;
+}
+
+.amount-in { color: var(--success); }
+.amount-blocked { color: var(--muted); text-decoration: line-through; }
+
+// A two-column list: label on the left, value on the right.
+.details {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 10px 16px;
+  margin: 0 0 16px;
+
+  dt { color: var(--muted); font-size: 0.85rem; }
+  dd { margin: 0; min-width: 0; }
+}
+
+.id-row { gap: 8px; flex-wrap: nowrap; }
+
+code {
+  font-size: 0.8rem;
+  overflow-wrap: anywhere; // long ids wrap instead of widening the card
+}
+
+.actions { border-top: 1px solid var(--line); padding-top: 16px; }
