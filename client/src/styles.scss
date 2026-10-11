@@ -1,1 +1,203 @@
-/* You can add global styles to this file, and also import other style files */
+/* Global styles: one small design system every page shares.
+   Pages use these classes, so component styles stay tiny. */
+
+:root {
+  --bg: #f5f6fa;
+  --surface: #ffffff;
+  --text: #16181d;
+  --muted: #5d6472;
+  --line: #e3e6ec;
+
+  --primary: #5b3df5;
+  --primary-hover: #4a2ee0;
+  --primary-tint: #eeeafe;
+
+  --success: #12753a;
+  --success-tint: #e6f5ec;
+  --danger: #b42318;
+  --danger-tint: #fdecea;
+  --warning: #8a5300;
+  --warning-tint: #fff4dc;
+  --warning-line: #f3dca6;
+
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 1px 2px rgb(16 24 40 / 6%), 0 1px 3px rgb(16 24 40 / 8%);
+  --max-width: 1040px;
+  --font: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+a { color: var(--primary); }
+
+h1, h2, h3 { line-height: 1.25; margin: 0 0 8px; }
+
+/* ---------- layout ---------- */
+.container {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+
+.page-header { margin-bottom: 20px; }
+.page-title { font-size: 1.6rem; font-weight: 750; margin: 0 0 4px; }
+.muted { color: var(--muted); }
+.small { font-size: 0.85rem; }
+.amount { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+
+.grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.stack { display: flex; flex-direction: column; gap: 16px; }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.spacer { flex: 1; }
+
+/* ---------- cards ---------- */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px;
+}
+.card-title { font-size: 1.05rem; font-weight: 650; margin: 0 0 12px; }
+.narrow { max-width: 440px; margin-left: auto; margin-right: auto; }
+
+.stat-label { color: var(--muted); font-size: 0.85rem; font-weight: 500; }
+.stat-value { font-size: 1.9rem; font-weight: 750; font-variant-numeric: tabular-nums; }
+
+/* ---------- buttons ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  padding: 9px 16px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
+.btn-secondary { background: var(--surface); color: var(--text); border-color: var(--line); }
+.btn-secondary:hover:not(:disabled) { background: var(--bg); }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-sm { padding: 5px 10px; font-size: 0.85rem; }
+.btn-block { width: 100%; }
+
+/* ---------- forms ---------- */
+.form-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+.form-field label { font-weight: 600; font-size: 0.9rem; }
+.form-field .hint { color: var(--muted); font-size: 0.8rem; }
+
+input[type='text'],
+input[type='email'],
+input[type='password'],
+input[type='number'],
+input[type='date'],
+select,
+textarea {
+  width: 100%;
+  font: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 9px 12px;
+}
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid var(--primary-tint);
+  border-color: var(--primary);
+}
+input.invalid,
+select.invalid { border-color: var(--danger); }
+.field-error { color: var(--danger); font-size: 0.82rem; }
+
+/* toggle switch: <label class="switch"><input type="checkbox"><span></span></label> */
+.switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.switch span {
+  position: absolute;
+  inset: 0;
+  background: #c8ccd4;
+  border-radius: 24px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+.switch span::before {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  left: 3px;
+  top: 3px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.15s ease;
+}
+.switch input:checked + span { background: var(--success); }
+.switch input:checked + span::before { transform: translateX(20px); }
+.switch input:focus-visible + span { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+/* ---------- panels (messages) ---------- */
+.panel { border-radius: var(--radius-sm); padding: 12px 16px; border: 1px solid; margin-bottom: 16px; }
+.panel-title { font-weight: 700; margin-bottom: 2px; }
+.panel-success { background: var(--success-tint); border-color: #b5dfc4; color: var(--success); }
+.panel-danger { background: var(--danger-tint); border-color: #f5c2bd; color: var(--danger); }
+.panel-info { background: var(--primary-tint); border-color: #d6cdfd; color: var(--primary-hover); }
+
+/* ---------- badges ---------- */
+.badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 650;
+  white-space: nowrap;
+}
+.badge-success { background: var(--success-tint); color: var(--success); }
+.badge-danger { background: var(--danger-tint); color: var(--danger); }
+.badge-neutral { background: var(--bg); color: var(--muted); }
+
+/* ---------- tables ---------- */
+.table-wrap { overflow-x: auto; }
+.table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+.table th {
+  text-align: left;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+  font-weight: 650;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+}
+.table td { padding: 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.table tr:last-child td { border-bottom: none; }
+.table .num { text-align: right; }
+
+/* ---------- states ---------- */
+.empty-state { text-align: center; padding: 40px 20px; color: var(--muted); }
+.loading { color: var(--muted); padding: 24px 0; text-align: center; }
+
+.pagination { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-top: 16px; }

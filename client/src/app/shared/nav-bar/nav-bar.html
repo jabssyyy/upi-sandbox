@@ -1,0 +1,34 @@
+<div class="sandbox-banner" role="note">Sandbox: fake money only. No real payments, banks or UPI.</div>
+
+<header class="nav">
+  <div class="nav-inner">
+    <a class="brand" routerLink="/">UPI <span>Sandbox</span></a>
+
+    @if (auth.isLoggedIn()) {
+      <nav class="links">
+        <a routerLink="/wallet" routerLinkActive="active">Wallet</a>
+        <a routerLink="/send" routerLinkActive="active">Send</a>
+        <a routerLink="/history" routerLinkActive="active">History</a>
+        @if (auth.isAdmin()) {
+          <a routerLink="/admin/rules" routerLinkActive="active">Rules</a>
+          <a routerLink="/admin/blocked" routerLinkActive="active">Blocked log</a>
+        }
+      </nav>
+
+      @if (auth.user(); as user) {
+        <div class="who">
+          <div class="who-text">
+            <strong>{{ user.name }}</strong>
+            <span class="muted">{{ user.upiId }} · {{ user.balance / 100 | currency: 'INR' : 'symbol' : '1.0-2' }}</span>
+          </div>
+          <button type="button" class="btn btn-secondary btn-sm" (click)="auth.logout()">Log out</button>
+        </div>
+      }
+    } @else {
+      <nav class="links">
+        <a routerLink="/login" routerLinkActive="active">Log in</a>
+        <a routerLink="/register" routerLinkActive="active">Register</a>
+      </nav>
+    }
+  </div>
+</header>
