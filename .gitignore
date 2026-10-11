@@ -1,0 +1,15 @@
+# dependencies
+node_modules/
+
+# secrets: never commit real credentials
+.env
+
+# build output
+dist/
+.angular/
+
+# editor / OS noise
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db
