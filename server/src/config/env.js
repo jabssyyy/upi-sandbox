@@ -16,4 +16,6 @@ export const env = {
   jwtSecret: process.env.JWT_SECRET,
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '2h',
   clientOrigin: process.env.CLIENT_ORIGIN || 'http://localhost:4200',
+  // Optional, e.g. "8.8.8.8,1.1.1.1". Empty means use the computer's normal DNS.
+  dnsServers: (process.env.DNS_SERVERS || '').split(',').map((s) => s.trim()).filter(Boolean),
 };
