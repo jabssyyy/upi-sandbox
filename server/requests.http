@@ -1,0 +1,14 @@
+# Open in VS Code with the "REST Client" extension and click "Send Request".
+@api = http://localhost:3000/api
+
+### Health check: expect 200 { "ok": true }
+GET {{api}}/health
+
+### Unknown route: expect 404 with the shared error shape
+GET {{api}}/does-not-exist
+
+### Broken JSON body: expect 400 VALIDATION_ERROR
+POST {{api}}/health
+Content-Type: application/json
+
+{ "oops":
